@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+outputs/*.docx
+outputs/*.pdf
+outputs/*.tex
+outputs/*.bib
+outputs/*.zip
+outputs/*.png
+!outputs/.gitkeep

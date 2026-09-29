@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PaperGen — Academic Research Paper Generator Agent</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            academic: {
+              50: '#f8fafc',
+              100: '#f1f5f9',
+              200: '#e2e8f0',
+              700: '#334155',
+              800: '#1e293b',
+              900: '#0f172a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- KaTeX for Math Rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+  <!-- Marked.js for Markdown -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="bg-slate-50 text-slate-900 h-screen flex flex-col overflow-hidden">
+
+  <!-- ================= TOP HEADER / NAVIGATION ================= -->
+  <header class="bg-academic-900 text-white border-b border-slate-800 px-6 py-3 flex items-center justify-between z-30 shrink-0 shadow-md">
+    <div class="flex items-center space-x-3">
+      <div class="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-inner">
+        <i data-lucide="book-open-check" class="w-5 h-5"></i>
+      </div>
+      <div>
+        <div class="flex items-center space-x-2">
+          <h1 class="font-bold text-lg tracking-tight">PaperGen</h1>
+          <span class="text-[10px] font-semibold tracking-wider bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded border border-blue-400/30">ACADEMIC AGENT v1.0</span>
+        </div>
+        <p class="text-xs text-slate-400">Autonomous Publication-Grade Manuscript Synthesis & Interactive Peer Refinement</p>
+      </div>
+    </div>
+
+    <!-- Export Actions & Settings -->
+    <div class="flex items-center space-x-2">
+      <!-- Status Badge -->
+      <div class="hidden md:flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs mr-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span id="agent-status-badge">Agent Ready</span>
+      </div>
+
+      <!-- Export Dropdown / Buttons -->
+      <div class="flex items-center bg-slate-800 rounded-lg p-0.5 border border-slate-700">
+        <button id="btn-export-latex" onclick="exportPaper('latex-zip')" title="Download LaTeX Source & BibTeX Bundle (.zip)" class="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium text-slate-200 hover:text-white hover:bg-slate-700 rounded transition disabled:opacity-40">
+          <i data-lucide="file-code" class="w-3.5 h-3.5 text-emerald-400"></i>
+          <span>LaTeX (.zip)</span>
+        </button>
+        <button id="btn-export-docx" onclick="exportPaper('docx')" title="Download Microsoft Word Document (.docx)" class="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium text-slate-200 hover:text-white hover:bg-slate-700 rounded transition disabled:opacity-40">
+          <i data-lucide="file-text" class="w-3.5 h-3.5 text-blue-400"></i>
+          <span>Word (.docx)</span>
+        </button>
+        <button id="btn-export-pdf" onclick="exportPaper('pdf')" title="Download Publication-Ready PDF (.pdf)" class="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium text-slate-200 hover:text-white hover:bg-slate-700 rounded transition disabled:opacity-40">
+          <i data-lucide="file-down" class="w-3.5 h-3.5 text-rose-400"></i>
+          <span>PDF</span>
+        </button>
+        <button onclick="window.print()" title="Direct Print / Save as PDF" class="flex items-center space-x-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-200 hover:text-white hover:bg-slate-700 rounded transition">
+          <i data-lucide="printer" class="w-3.5 h-3.5 text-amber-400"></i>
+        </button>
+      </div>
+
+      <!-- LLM Settings Button -->
+      <button onclick="toggleSettingsModal()" class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition" title="LLM & Agent Settings">
+        <i data-lucide="settings" class="w-4 h-4"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- ================= MAIN WORKSPACE (3-COLUMN LAYOUT) ================= -->
+  <div class="flex-1 flex overflow-hidden">
+
+    <!-- ================= LEFT COLUMN: GENERATOR CONTROLS ================= -->
+    <aside id="sidebar-panel" class="w-80 md:w-96 bg-white border-r border-slate-200 flex flex-col shrink-0 overflow-y-auto shadow-sm">
+      <div class="p-5 border-b border-slate-100">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="font-bold text-sm text-slate-800 flex items-center space-x-2">
+            <i data-lucide="sliders" class="w-4 h-4 text-blue-600"></i>
+            <span>Paper Specifications</span>
+          </h2>
+          <span class="text-[11px] text-slate-400">Configure parameters</span>
+        </div>
+
+        <!-- Presets Dropdown -->
+        <div class="mb-4">
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Quick Sample Presets</label>
+          <select id="preset-selector" onchange="applyPreset(this.value)" class="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="">-- Choose a Research Frontier Preset --</option>
+          </select>
+        </div>
+
+        <!-- Research Topic Input -->
+        <div class="mb-4">
+          <div class="flex items-center justify-between mb-1">
+            <label class="block text-xs font-semibold text-slate-700">Research Topic / Title / Hypothesis</label>
+            <span class="text-[10px] text-blue-600 cursor-pointer hover:underline" onclick="suggestRandomTopic()">Inspire me</span>
+          </div>
+          <textarea id="param-topic" rows="3" class="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-slate-400 resize-none font-medium" placeholder="e.g. Scalable Quantum-Resistant Cryptographic Routing in Next-Generation 6G Networks..."></textarea>
+        </div>
+
+        <!-- Academic Domain -->
+        <div class="mb-4">
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Academic Domain</label>
+          <select id="param-domain" class="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="Computer Science & AI">Computer Science & AI</option>
+            <option value="Cybersecurity & Networks">Cybersecurity & Networks</option>
+            <option value="Biomedical & Healthcare">Biomedical & Healthcare</option>
+            <option value="Robotics & Control">Robotics & Control</option>
+            <option value="Generic Academic">General Science & Engineering</option>
+          </select>
+        </div>
+
+        <!-- TARGET PAGES SLIDER (Default: 12) -->
+        <div class="mb-4 bg-slate-50 p-3 rounded-lg border border-slate-100">
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="text-xs font-bold text-slate-800 flex items-center space-x-1.5">
+              <i data-lucide="book" class="w-3.5 h-3.5 text-blue-600"></i>
+              <span>Target Pages:</span>
+            </label>
+            <span id="pages-badge" class="px-2 py-0.5 bg-blue-100 text-blue-800 font-bold text-xs rounded-full">12 Pages</span>
+          </div>
+          <input type="range" id="param-pages" min="2" max="24" step="1" value="12" oninput="updatePagesDisplay(this.value)" class="w-full accent-blue-600 cursor-pointer">
+          <div class="flex justify-between text-[10px] text-slate-400 mt-1">
+            <span>2 (Letter)</span>
+            <span class="font-semibold text-blue-600">12 (Default)</span>
+            <span>24 (Monograph)</span>
+          </div>
+        </div>
+
+        <!-- TARGET REFERENCES SLIDER (Default: 36) -->
+        <div class="mb-4 bg-slate-50 p-3 rounded-lg border border-slate-100">
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="text-xs font-bold text-slate-800 flex items-center space-x-1.5">
+              <i data-lucide="quote" class="w-3.5 h-3.5 text-emerald-600"></i>
+              <span>Target References:</span>
+            </label>
+            <span id="refs-badge" class="px-2 py-0.5 bg-emerald-100 text-emerald-800 font-bold text-xs rounded-full">36 Citations</span>
+          </div>
+          <input type="range" id="param-refs" min="5" max="80" step="1" value="36" oninput="updateRefsDisplay(this.value)" class="w-full accent-emerald-600 cursor-pointer">
+          <div class="flex justify-between text-[10px] text-slate-400 mt-1">
+            <span>5 (Brief)</span>
+            <span class="font-semibold text-emerald-600">36 (Default)</span>
+            <span>80 (Exhaustive)</span>
+          </div>
+        </div>
+
+        <!-- PAPER TEMPLATE SELECTOR (Optional) -->
+        <div class="mb-4">
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Paper Template (Optional)</label>
+          <select id="param-template" class="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="ieee" selected>IEEE Conference & Transactions (Two-Column Standard)</option>
+            <option value="acm">ACM SIGCONF / Master Article</option>
+            <option value="springer">Springer LNCS (Lecture Notes in Computer Science)</option>
+            <option value="nature">Nature / Science Format</option>
+            <option value="apa">APA 7th Edition Academic Journal</option>
+            <option value="neurips">NeurIPS / ICML AI Style</option>
+          </select>
+        </div>
+
+        <!-- Advanced Options Toggle -->
+        <div class="border-t border-slate-100 pt-3">
+          <button onclick="toggleAdvancedOptions()" class="flex items-center justify-between w-full text-xs font-medium text-slate-600 hover:text-slate-900">
+            <span class="flex items-center space-x-1.5">
+              <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i>
+              <span>Academic Artifacts & Details</span>
+            </span>
+            <i id="adv-chevron" data-lucide="chevron-down" class="w-3.5 h-3.5 transition-transform"></i>
+          </button>
+          
+          <div id="advanced-options-panel" class="hidden mt-2.5 space-y-2 text-xs text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100">
+            <label class="flex items-center space-x-2">
+              <input type="checkbox" id="param-figures" checked class="rounded text-blue-600 accent-blue-600">
+              <span>Generate Scientific Charts (Matplotlib 300 DPI)</span>
+            </label>
+            <label class="flex items-center space-x-2">
+              <input type="checkbox" id="param-tables" checked class="rounded text-blue-600 accent-blue-600">
+              <span>Generate Comparison & Result Tables</span>
+            </label>
+            <label class="flex items-center space-x-2">
+              <input type="checkbox" id="param-algorithms" checked class="rounded text-blue-600 accent-blue-600">
+              <span>Generate Algorithm Pseudocode (Algorithm 1)</span>
+            </label>
+            <div class="pt-1">
+              <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">Custom Directives / Specific Hypotheses</label>
+              <input type="text" id="param-instructions" placeholder="e.g. Focus on sub-millisecond edge latency..." class="w-full text-[11px] bg-white border border-slate-200 rounded px-2 py-1">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Generate Button Box -->
+      <div class="p-5 mt-auto bg-slate-50 border-t border-slate-100">
+        <button id="btn-generate-paper" onclick="triggerPaperGeneration()" class="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold py-3 px-4 rounded-xl shadow-lg shadow-blue-500/20 flex items-center justify-center space-x-2 transition transform hover:-translate-y-0.5">
+          <i data-lucide="sparkles" class="w-4 h-4"></i>
+          <span>Generate Academic Paper</span>
+        </button>
+        <p class="text-[10px] text-center text-slate-400 mt-2">Synthesizes complete LaTeX, Word (.docx) & PDF documents</p>
+      </div>
+    </aside>
+
+    <!-- ================= CENTER COLUMN: ACADEMIC WORKBENCH ================= -->
+    <main class="flex-1 flex flex-col bg-slate-100 overflow-hidden relative">
+      
+      <!-- Top Paper Ribbon: Title & Metrics -->
+      <div id="paper-meta-ribbon" class="bg-white border-b border-slate-200 px-6 py-2.5 flex items-center justify-between shrink-0 shadow-sm">
+        <div class="flex items-center space-x-3 overflow-hidden">
+          <span id="ribbon-template-badge" class="px-2.5 py-0.5 rounded text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200 uppercase tracking-wide">IEEE</span>
+          <div class="truncate">
+            <h2 id="ribbon-title" class="font-bold text-sm text-slate-900 truncate">No paper loaded yet</h2>
+            <p id="ribbon-authors" class="text-xs text-slate-500 truncate">Configure parameters and click Generate Academic Paper</p>
+          </div>
+        </div>
+
+        <!-- Live Metrics Bar -->
+        <div class="hidden lg:flex items-center space-x-4 shrink-0 text-xs">
+          <div class="flex items-center space-x-1.5 text-slate-600">
+            <i data-lucide="file-stack" class="w-3.5 h-3.5 text-blue-500"></i>
+            <span>Pages: <b id="stat-pages" class="text-slate-900 font-bold">12</b></span>
+          </div>
+          <div class="flex items-center space-x-1.5 text-slate-600">
+            <i data-lucide="quote" class="w-3.5 h-3.5 text-emerald-500"></i>
+            <span>Refs: <b id="stat-refs" class="text-slate-900 font-bold">36</b></span>
+          </div>
+          <div class="flex items-center space-x-1.5 text-slate-600">
+            <i data-lucide="align-left" class="w-3.5 h-3.5 text-amber-500"></i>
+            <span>Words: <b id="stat-words" class="text-slate-900 font-bold">~7,200</b></span>
+          </div>
+          <div class="flex items-center space-x-1.5 text-slate-600">
+            <i data-lucide="award" class="w-3.5 h-3.5 text-purple-500"></i>
+            <span>Rigor: <b id="stat-rigor" class="text-slate-900 font-bold">98.4%</b></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div id="tabs-bar" class="bg-white border-b border-slate-200 px-6 flex items-center justify-between shrink-0">
+        <div class="flex space-x-6 text-xs font-semibold">
+          <button onclick="switchTab('preview')" id="tab-btn-preview" class="py-3 border-b-2 border-blue-600 text-blue-600 flex items-center space-x-1.5">
+            <i data-lucide="layout-template" class="w-4 h-4"></i>
+            <span>Formatted Paper Preview</span>
+          </button>
+          <button onclick="switchTab('editor')" id="tab-btn-editor" class="py-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-1.5">
+            <i data-lucide="edit-3" class="w-4 h-4"></i>
+            <span>Section-by-Section Editor</span>
+          </button>
+          <button onclick="switchTab('latex')" id="tab-btn-latex" class="py-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-1.5">
+            <i data-lucide="code-2" class="w-4 h-4"></i>
+            <span>LaTeX Source Code</span>
+          </button>
+          <button onclick="switchTab('print')" id="tab-btn-print" class="py-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center space-x-1.5">
+            <i data-lucide="printer" class="w-4 h-4"></i>
+            <span>Print / PDF View</span>
+          </button>
+        </div>
+
+        <div class="flex items-center space-x-2 py-2">
+          <button onclick="toggleChatPanel()" class="flex items-center space-x-1 px-3 py-1.5 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition font-medium">
+            <i data-lucide="messages-square" class="w-3.5 h-3.5 text-blue-600"></i>
+            <span id="chat-toggle-label">Hide Agent Chat</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- View Containers -->
+      <div class="flex-1 overflow-y-auto p-6 flex justify-center">
+
+        <!-- 1. FORMATTED PREVIEW TAB -->
+        <div id="tab-content-preview" class="w-full max-w-4xl">
+          <div id="paper-render-container" class="academic-page-sheet min-h-[900px]">
+            <!-- Rendered Paper content gets injected here -->
+            <div class="text-center py-24 text-slate-400">
+              <i data-lucide="file-search" class="w-16 h-16 mx-auto mb-4 text-slate-300"></i>
+              <h3 class="text-lg font-bold text-slate-600 mb-1">No Academic Paper Generated Yet</h3>
+              <p class="text-sm max-w-md mx-auto">Select a research topic on the left sidebar, customize target pages and references, then click <b>Generate Academic Paper</b>.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. SECTION EDITOR TAB -->
+        <div id="tab-content-editor" class="hidden w-full max-w-4xl space-y-4">
+          <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <h3 class="font-bold text-sm text-slate-800">Section-Level Precision Editor</h3>
+              <p class="text-xs text-slate-500">Edit titles, text blocks, and equations directly, or dispatch revisions to the AI agent.</p>
+            </div>
+            <button onclick="saveAllSections()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition">
+              <i data-lucide="check" class="w-3.5 h-3.5"></i>
+              <span>Save Changes</span>
+            </button>
+          </div>
+          
+          <div id="editor-sections-accordion" class="space-y-3">
+            <!-- Accordion cards populated dynamically -->
+          </div>
+        </div>
+
+        <!-- 3. LATEX SOURCE CODE TAB -->
+        <div id="tab-content-latex" class="hidden w-full max-w-4xl flex flex-col space-y-3">
+          <div class="bg-white p-3 rounded-lg border border-slate-200 flex items-center justify-between">
+            <span class="text-xs font-semibold text-slate-700 flex items-center space-x-1.5">
+              <i data-lucide="file-code" class="w-4 h-4 text-emerald-600"></i>
+              <span>Compilable LaTeX Manuscript & BibTeX</span>
+            </span>
+            <div class="flex space-x-2">
+              <button onclick="copyLatexSource()" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-xs font-medium flex items-center space-x-1">
+                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                <span id="copy-latex-btn-text">Copy LaTeX</span>
+              </button>
+              <button onclick="exportPaper('latex')" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-medium flex items-center space-x-1">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                <span>Download .tex</span>
+              </button>
+              <button onclick="exportPaper('bib')" class="px-3 py-1 bg-slate-700 hover:bg-slate-800 text-white rounded text-xs font-medium flex items-center space-x-1">
+                <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                <span>Download .bib</span>
+              </button>
+            </div>
+          </div>
+          <textarea id="latex-source-textarea" readonly class="w-full flex-1 min-h-[600px] p-4 font-mono text-xs bg-slate-900 text-emerald-400 rounded-xl border border-slate-800 shadow-inner focus:outline-none resize-none leading-relaxed"></textarea>
+        </div>
+
+        <!-- 4. PRINT / PDF TAB -->
+        <div id="tab-content-print" class="hidden w-full max-w-4xl">
+          <div class="bg-amber-50 border border-amber-200 p-4 rounded-xl mb-4 flex items-center justify-between text-amber-900 text-xs">
+            <div class="flex items-center space-x-2">
+              <i data-lucide="info" class="w-4 h-4 text-amber-600"></i>
+              <span>Print Preview conforms to standard academic margins. You can print directly or save as PDF via your browser.</span>
+            </div>
+            <button onclick="window.print()" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg shadow-sm">
+              Open Print Dialog
+            </button>
+          </div>
+          <div id="print-render-container" class="academic-page-sheet">
+            <!-- Mirrored content for print -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Loading Overlay -->
+      <div id="generation-loader" class="hidden absolute inset-0 bg-white/80 backdrop-blur-sm z-40 flex flex-col items-center justify-center">
+        <div class="w-14 h-14 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4"></div>
+        <h3 class="text-base font-bold text-slate-800 mb-1" id="loader-title">Generating Academic Paper...</h3>
+        <p class="text-xs text-slate-500 max-w-sm text-center" id="loader-subtitle">Synthesizing theoretical foundations, equations, and authentic citations...</p>
+      </div>
+    </main>
+
+    <!-- ================= RIGHT COLUMN: INTERACTIVE AGENT CHAT ================= -->
+    <aside id="chat-panel" class="w-80 md:w-96 bg-white border-l border-slate-200 flex flex-col shrink-0 shadow-sm">
+      <!-- Agent Header -->
+      <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-sm">
+            <i data-lucide="bot" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-xs text-slate-800">Academic Research Agent</h3>
+            <p class="text-[10px] text-emerald-600 flex items-center space-x-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span>
+              <span>Peer Reviewer & Scientific Collaborator</span>
+            </p>
+          </div>
+        </div>
+        <span class="text-[10px] px-2 py-0.5 rounded bg-slate-200 text-slate-700 font-semibold" id="chat-focus-badge">Global Focus</span>
+      </div>
+
+      <!-- Quick Action Prompt Chips -->
+      <div class="p-2.5 border-b border-slate-100 bg-white flex flex-wrap gap-1.5">
+        <button onclick="sendQuickPrompt('Add formal mathematical proof and closed-loop Lyapunov stability bounds to the methodology')" class="text-[10px] bg-slate-100 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 border border-slate-200 px-2 py-1 rounded-md transition text-slate-600">
+          📐 Add Proof / Equations
+        </button>
+        <button onclick="sendQuickPrompt('Act as Reviewer #2 and provide critical academic critique of baseline fairness and ablation clarity')" class="text-[10px] bg-slate-100 hover:bg-purple-50 hover:text-purple-700 hover:border-purple-200 border border-slate-200 px-2 py-1 rounded-md transition text-slate-600">
+          🧐 Reviewer #2 Critique
+        </button>
+        <button onclick="sendQuickPrompt('Suggest 5 more contemporary high-impact references from 2024-2025 to cite in related work')" class="text-[10px] bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 border border-slate-200 px-2 py-1 rounded-md transition text-slate-600">
+          📚 Add 5 Citations
+        </button>
+        <button onclick="sendQuickPrompt('Rewrite and elevate the abstract to highlight quantitative gains of +14.8% and faster convergence')" class="text-[10px] bg-slate-100 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200 border border-slate-200 px-2 py-1 rounded-md transition text-slate-600">
+          ✨ Elevate Abstract
+        </button>
+      </div>
+
+      <!-- Chat Thread Messages -->
+      <div id="chat-messages-container" class="flex-1 p-4 overflow-y-auto space-y-3 text-xs">
+        <div class="chat-bubble-agent p-3 border border-slate-200">
+          <p class="font-semibold text-blue-600 mb-1 flex items-center space-x-1">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+            <span>Agent Greeting</span>
+          </p>
+          <p class="text-slate-700 leading-relaxed">
+            Welcome! I am your Academic Co-Author & Research Paper Agent. I can help refine sections, formulate proofs, expand literature reviews, enhance tone, and address reviewer critiques.
+          </p>
+        </div>
+      </div>
+
+      <!-- Section Focus Selector -->
+      <div class="px-3 pt-2 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[11px]">
+        <span class="text-slate-500 font-medium">Refining Section:</span>
+        <select id="chat-section-select" class="bg-white border border-slate-200 rounded px-2 py-0.5 text-slate-700 text-[11px] focus:outline-none">
+          <option value="">Entire Paper (Global)</option>
+        </select>
+      </div>
+
+      <!-- Chat Input Box -->
+      <div class="p-3 bg-slate-50 border-t border-slate-200">
+        <div class="relative flex items-center">
+          <input type="text" id="chat-input" onkeydown="handleChatKeyDown(event)" placeholder="Ask agent to improve, expand, or critique..." class="w-full text-xs bg-white border border-slate-300 rounded-xl pl-3 pr-10 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <button onclick="submitChatMessage()" class="absolute right-1.5 p-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition" title="Send message">
+            <i data-lucide="send" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- ================= SETTINGS MODAL ================= -->
+  <div id="settings-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <h3 class="font-bold text-sm text-slate-800 flex items-center space-x-2">
+          <i data-lucide="cpu" class="w-4 h-4 text-blue-600"></i>
+          <span>AI Model & Provider Settings</span>
+        </h3>
+        <button onclick="toggleSettingsModal()" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="py-4 space-y-4 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">AI Provider Engine</label>
+          <select id="setting-provider" onchange="handleProviderChange(this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-800 focus:ring-2 focus:ring-blue-500">
+            <option value="built-in">Autonomous Academic Synthesizer (Built-in, No API Key needed)</option>
+            <option value="openai">OpenAI (GPT-4o, GPT-4o-mini)</option>
+            <option value="gemini">Google Gemini (Gemini 1.5 Pro / Flash)</option>
+            <option value="ollama">Local Ollama (Llama 3, Mistral, Qwen)</option>
+          </select>
+          <p class="text-[11px] text-slate-500 mt-1">The built-in engine provides instant, deep academic papers with authentic citations and equations offline without needing an API key.</p>
+        </div>
+
+        <div id="setting-api-key-container" class="hidden">
+          <label class="block font-semibold text-slate-700 mb-1">API Key</label>
+          <input type="password" id="setting-api-key" placeholder="sk-..." class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-800 focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Model Name (Optional)</label>
+          <input type="text" id="setting-model-name" placeholder="e.g. gpt-4o, gemini-1.5-pro, llama3" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-800 focus:ring-2 focus:ring-blue-500">
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-slate-100 flex justify-end space-x-2">
+        <button onclick="toggleSettingsModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold">Cancel</button>
+        <button onclick="saveSettings()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold">Save Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Application Logic -->
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

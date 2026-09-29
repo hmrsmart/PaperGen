@@ -1,0 +1,220 @@
+/* Academic Research Paper Generator Stylesheet */
+
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --primary-navy: #0f172a;
+  --secondary-navy: #1e293b;
+  --accent-blue: #2563eb;
+  --accent-hover: #1d4ed8;
+  --academic-serif: 'Crimson Pro', 'Times New Roman', Georgia, serif;
+  --academic-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --academic-mono: 'JetBrains Mono', Consolas, monospace;
+}
+
+body {
+  font-family: var(--academic-sans);
+  background-color: #f8fafc;
+  color: #1e293b;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Academic Manuscript Paper Preview Container */
+.academic-page-sheet {
+  background: #ffffff;
+  box-shadow: 0 4px 25px -4px rgba(0, 0, 0, 0.1), 0 2px 10px -2px rgba(0, 0, 0, 0.05);
+  font-family: var(--academic-serif);
+  line-height: 1.65;
+  color: #1a1a1a;
+  padding: 3rem 3.5rem;
+  max-width: 900px;
+  margin: 0 auto;
+  border: 1px solid #e2e8f0;
+}
+
+.academic-title {
+  font-family: var(--academic-serif);
+  font-size: 2.2rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #0f172a;
+  text-align: center;
+  margin-bottom: 1.2rem;
+}
+
+.academic-authors {
+  text-align: center;
+  margin-bottom: 1.8rem;
+  font-family: var(--academic-sans);
+  font-size: 0.95rem;
+}
+
+.academic-abstract-box {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid #2563eb;
+  padding: 1.25rem 1.5rem;
+  margin: 1.5rem 0 2rem 0;
+  border-radius: 4px;
+  font-size: 0.98rem;
+}
+
+.academic-h1 {
+  font-family: var(--academic-serif);
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: #0f172a;
+  border-bottom: 1.5px solid #cbd5e1;
+  padding-bottom: 0.35rem;
+  margin-top: 2rem;
+  margin-bottom: 0.8rem;
+}
+
+.academic-h2 {
+  font-family: var(--academic-serif);
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-top: 1.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.academic-paragraph {
+  text-align: justify;
+  margin-bottom: 1rem;
+  font-size: 1.05rem;
+}
+
+/* Academic Tables */
+.academic-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-family: var(--academic-sans);
+  font-size: 0.88rem;
+}
+
+.academic-table th {
+  background-color: #1e293b;
+  color: #ffffff;
+  padding: 0.65rem 0.8rem;
+  text-align: center;
+  font-weight: 600;
+  border-top: 2px solid #0f172a;
+  border-bottom: 2px solid #0f172a;
+}
+
+.academic-table td {
+  padding: 0.55rem 0.8rem;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: center;
+}
+
+.academic-table tr:nth-child(even) td {
+  background-color: #f8fafc;
+}
+
+.academic-table tr:hover td {
+  background-color: #f1f5f9;
+}
+
+/* Algorithm Code Box */
+.academic-code-box {
+  background-color: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  padding: 1rem;
+  font-family: var(--academic-mono);
+  font-size: 0.85rem;
+  overflow-x: auto;
+  line-height: 1.5;
+  margin: 1.2rem 0;
+  color: #1e293b;
+}
+
+/* Scientific Figure Container */
+.academic-figure {
+  text-align: center;
+  margin: 2rem 0;
+}
+
+.academic-figure img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+}
+
+.academic-caption {
+  font-size: 0.88rem;
+  font-style: italic;
+  color: #475569;
+  margin-top: 0.6rem;
+  text-align: center;
+  font-family: var(--academic-sans);
+}
+
+/* References List */
+.academic-ref-item {
+  display: flex;
+  margin-bottom: 0.65rem;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  text-align: justify;
+}
+
+.academic-ref-idx {
+  font-weight: 700;
+  color: #2563eb;
+  min-width: 2.5rem;
+}
+
+/* Chat Styling */
+.chat-bubble-user {
+  background: #2563eb;
+  color: #ffffff;
+  border-radius: 16px 16px 4px 16px;
+}
+
+.chat-bubble-agent {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #1e293b;
+  border-radius: 16px 16px 16px 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+/* Print Optimization */
+@media print {
+  body {
+    background: #ffffff !important;
+  }
+  .no-print, header, aside, #chat-panel, #sidebar-panel, #tabs-bar {
+    display: none !important;
+  }
+  .academic-page-sheet {
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+}
